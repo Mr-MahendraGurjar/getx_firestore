@@ -4,20 +4,22 @@ import 'package:getx_firestore/models/todo.dart';
 class Database {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> addTodo(String todo) async {
+  Future<void> addTodo(String title, String description) async {
     try{
       await _firestore
         .collection('todos')
         .add({
           'createdAt': Timestamp.now(),
           'finished': false,
-          'todo': todo
+          'todo': title,
+          'description': description,
         });
     } catch (err) {
       print(err);
       rethrow;
     }
   }
+
 
   Future<void> finishTodo(Todo todo) async {
     try {

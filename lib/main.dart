@@ -5,7 +5,6 @@ import 'package:get/route_manager.dart';
 import 'package:getx_firestore/controllers/todoController.dart';
 import 'package:getx_firestore/services/database.dart';
 
-
 void main() {
   runApp(App());
 }
@@ -24,7 +23,6 @@ class App extends StatelessWidget {
 }
 
 class Home extends StatelessWidget {
-
   final Future<FirebaseApp> _initialization = Firebase.initializeApp();
 
   Home({Key key}) : super(key: key);
@@ -36,7 +34,6 @@ class Home extends StatelessWidget {
         body: FutureBuilder(
           future: _initialization,
           builder: (BuildContext context, AsyncSnapshot snapshot) {
-
             if (snapshot.hasError) {
               return Text('Error');
             }
@@ -45,7 +42,7 @@ class Home extends StatelessWidget {
               return TodoList();
             }
 
-            return Text('Cargando');
+            return Text('Data');
           },
         ),
       ),
@@ -54,8 +51,9 @@ class Home extends StatelessWidget {
 }
 
 class TodoList extends StatelessWidget {
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController descController = TextEditingController();
 
-  final TextEditingController _todoCtrl = TextEditingController();
   TodoList({Key key}) : super(key: key);
 
   @override
@@ -66,59 +64,129 @@ class TodoList extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Container(
-                  padding: EdgeInsets.only(left: 16),
-                  child: TextField(
-                    controller: _todoCtrl,
-                    decoration: InputDecoration.collapsed(hintText: 'Agregar todo'),
-                    onSubmitted: (value) {
-                      if (_todoCtrl.text != ""){
-                        Database()
-                          .addTodo(_todoCtrl.text);
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.only(left: 16,top: 10),
+                      child: TextField(
+                        decoration: new InputDecoration(
+                          hintText: 'Title',
+                          border: new OutlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.teal)),
+                        ),
+                        controller: titleController,
+                        onSubmitted: (value) {
+                          if (titleController.text != "") {
+                            Database().addTodo(
+                                titleController.text, descController.text);
 
-                        _todoCtrl.clear();
-                      }
-                    },
-                  ),
+                            titleController.clear();
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Container(
+                      padding: EdgeInsets.only(left: 16),
+                      child: TextField(
+                        controller: descController,
+                        decoration: new InputDecoration(
+                          hintText: 'Description',
+                          border: new OutlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.orange)),
+                        ),
+                        onSubmitted: (value) {
+                          if (descController.text != "") {
+                            Database().addTodo(
+                                descController.text, titleController.text);
+
+                            descController.clear();
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               IconButton(
                 icon: Icon(Icons.add),
                 onPressed: () {
-                  if (_todoCtrl.text != ""){
+                  if (titleController.text != "" && descController.text != "") {
                     Database()
-                      .addTodo(_todoCtrl.text);
+                        .addTodo(titleController.text, descController.text);
 
-                    _todoCtrl.clear();
+                    titleController.clear();
+                    descController.clear();
                   }
                 },
               )
             ],
           ),
         ),
-
         GetX<TodoController>(
           init: Get.put<TodoController>(TodoController()),
           builder: (TodoController todoController) {
             if (todoController != null && todoController.todos != null) {
               return Expanded(
-                child: ListView.builder(
-                  itemCount: todoController.todos.length,
-                  itemBuilder: (_, index) {
-                    return ListTile(                      
-                      title: Text(todoController.todos[index].todo),
-                      trailing: IconButton(
-                        icon: Icon(Icons.done, color: todoController.todos[index].finished ? Colors.green : Colors.white),
-                        onPressed: () {
-                          Database().finishTodo(todoController.todos[index]);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              );
+                  child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2),
+                      itemCount: todoController.todos.length,
+                      itemBuilder: (_, index) {
+                        return GestureDetector(
+                          onTap: () {
+//
+                            /*Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => UpdateNote(
+                                      docEdit: snapshot.data.documents[index],
+                                    )));*/
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(10)),
+                            margin: EdgeInsets.all(10),
+                            height: 50,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Text(
+                                    todoController.todos[index].todo,
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                        fontSize: 18),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    todoController.todos[index].description,
+                                    style: TextStyle(
+                                        color: Colors.orangeAccent,
+                                        fontSize: 15),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      })
+                  );
             } else {
-              return Text('Cargando las tareas');
+              return Text('No Data');
             }
           },
         ),

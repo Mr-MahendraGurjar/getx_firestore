@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Todo {
   String todo;
+  String description;
   String todoId;
   Timestamp createdAt;
   bool finished;
 
   Todo(
     this.todo,
+    this.description,
     this.todoId,
     this.createdAt,
     this.finished
@@ -18,6 +20,7 @@ class Todo {
   ) {
     todoId = documentSnapshot.id;
     todo = documentSnapshot.data()['todo'];
+    description = documentSnapshot.data()['description'];
     createdAt = documentSnapshot.data()['createdAt'];
     finished = documentSnapshot.data()['finished'];
   }
